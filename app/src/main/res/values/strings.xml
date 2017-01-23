@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SmsMaid</string>
+
+    <string name="time_unit_second"> s </string>
+    <string name="time_unit_minute"> m </string>
+    <string name="time_unit_hour"> h </string>
+    <string name="time_unit_day"> d </string>
+</resources>

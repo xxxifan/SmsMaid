@@ -94,14 +94,11 @@ class Strings private constructor() {
         }
 
         fun escapeExprSpecialWord(keyword: String): String {
-            var keyword = keyword
+            var newKeyword = keyword
             val fbsArr = arrayOf("\\", "$", "(", ")", "*", "+", ".", "[", "]", "?", "^", "{", "}", "|")
-            for (key in fbsArr) {
-                if (keyword.contains(key)) {
-                    keyword = keyword.replace(key, "\\" + key)
-                }
-            }
-            return keyword
+            fbsArr.filter { newKeyword.contains(it) }
+                    .forEach { newKeyword = newKeyword.replace(it, "\\" + it) }
+            return newKeyword
         }
 
         /**
@@ -144,8 +141,8 @@ class Strings private constructor() {
 
                 val hex = StringBuilder(hash.size * 2)
                 for (b in hash) {
-                    if (b and 0xFF < 0x10) hex.append("0")
-                    hex.append(Integer.toHexString(b and 0xFF))
+                    if (b.toInt() and 0xFF < 0x10) hex.append("0")
+                    hex.append(Integer.toHexString(b.toInt() and 0xFF))
                 }
                 return hex.toString()
             } catch (e: Exception) {
@@ -178,8 +175,8 @@ class Strings private constructor() {
                 val hash = digest.digest(string.toByteArray(charset("UTF-8")))
                 val hex = StringBuilder(hash.size * 2)
                 for (b in hash) {
-                    if (b and 0xFF < 0x10) hex.append("0")
-                    hex.append(Integer.toHexString(b and 0xFF))
+                    if (b.toInt() and 0xFF < 0x10) hex.append("0")
+                    hex.append(Integer.toHexString(b.toInt() and 0xFF))
                 }
                 return hex.toString()
             } catch (e: Exception) {

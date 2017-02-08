@@ -13,4 +13,9 @@ class App :Application() {
             return app!!
         }
     }
+
+    override fun onCreate() {
+        super.onCreate()
+        App.app = this
+    }
 }

@@ -34,76 +34,73 @@ import java.lang.ref.WeakReference
  * Created by xifan on 6/7/16.
  */
 class Fragments {
-    val TAG = "Fragments"
-    val KEY_RESTORE = "restore"
-    val KEY_RESTORE_VIEWPAGER = "restore_viewpager"
 
-    /**
-     * checkout with FRAGMENT_CONTAINER(which is defined in BaseActivity, is R.id.fragment_container
-     * it will use BaseFragment.getSimpleName() as tag, or SimpleClassName if fallback.
-     */
-    @CheckResult
-    fun checkout(activity: FragmentActivity, fragment: Fragment): SingleOperator {
-        return SingleOperator(activity, fragment)
-    }
+    companion object {
 
-    /**
-     * checkout with specified tag
-     */
-    @CheckResult
-    fun checkout(activity: FragmentActivity, fragment: Fragment, tag: String): SingleOperator {
-        return SingleOperator(activity, fragment, tag)
-    }
-
-    /**
-     * checkout previously fragment by tag
-     */
-    @CheckResult
-    fun checkout(activity: FragmentActivity, tag: String): SingleOperator {
-        return SingleOperator(activity, tag)
-    }
-
-    /**
-     * add multi fragments
-     */
-    @CheckResult
-    fun add(activity: FragmentActivity, vararg fragments: Fragment): MultiOperator {
-        if (fragments == null) {
-            throw IllegalArgumentException("Can't accept null fragments")
+        /**
+         * checkout with FRAGMENT_CONTAINER(which is defined in BaseActivity, is R.id.fragment_container
+         * it will use BaseFragment.getSimpleName() as tag, or SimpleClassName if fallback.
+         */
+        @CheckResult
+        fun checkout(activity: FragmentActivity, fragment: Fragment): SingleOperator {
+            return SingleOperator(activity, fragment)
         }
-        return MultiOperator(activity, fragments)
-    }
 
-    /**
-     * get current visible fragment on container
-     */
-    fun getCurrentFragment(activity: FragmentActivity, containerId: Int): Fragment {
-        return activity.supportFragmentManager.findFragmentById(containerId)
-    }
+        /**
+         * checkout with specified tag
+         */
+        @CheckResult
+        fun checkout(activity: FragmentActivity, fragment: Fragment, tag: String): SingleOperator {
+            return SingleOperator(activity, fragment, tag)
+        }
 
-    fun getFragment(activity: FragmentActivity, tag: String): Fragment {
-        return activity.supportFragmentManager.findFragmentByTag(tag)
-    }
+        /**
+         * checkout previously fragment by tag
+         */
+        @CheckResult
+        fun checkout(activity: FragmentActivity, tag: String): SingleOperator {
+            return SingleOperator(activity, tag)
+        }
 
-    fun getFragmentList(activity: FragmentActivity): List<Fragment>? {
-        return activity.supportFragmentManager.fragments
-    }
+        /**
+         * add multi fragments
+         */
+        @CheckResult
+        fun add(activity: FragmentActivity, vararg fragments: Fragment): MultiOperator {
+            return MultiOperator(activity, arrayOf(*fragments))
+        }
 
-    private fun getTag(fragment: Fragment): String {
-        return if (Strings.isEmpty(fragment.tag))
-            if (fragment is BaseFragment)
-                (fragment as BaseFragment).getSimpleName()
-            else
+        /**
+         * get current visible fragment on container
+         */
+        fun getCurrentFragment(activity: FragmentActivity, containerId: Int): Fragment {
+            return activity.supportFragmentManager.findFragmentById(containerId)
+        }
+
+        fun getFragment(activity: FragmentActivity, tag: String): Fragment {
+            return activity.supportFragmentManager.findFragmentByTag(tag)
+        }
+
+        fun getFragmentList(activity: FragmentActivity): List<Fragment>? {
+            return activity.supportFragmentManager.fragments
+        }
+
+        private fun getTag(fragment: Fragment): String {
+            return if (Strings.isEmpty(fragment.tag))
+//            if (fragment is BaseFragment)
+//                (fragment as BaseFragment).getSimpleName()
+//            else
                 fragment.javaClass.name
-        else
-            fragment.tag
+            else
+                fragment.tag
+        }
     }
 
-   inner class SingleOperator {
-        private var activityRef: WeakReference<FragmentActivity>? = null
+    class SingleOperator {
+        private var activityRef: WeakReference<FragmentActivity>
         private var fragment: Fragment? = null
-        private var tag: String? = null
-        private var transaction: FragmentTransaction? = null
+        private var tag: String
+        private var transaction: FragmentTransaction?
 
         private var addToBackStack: Boolean = false
         private var fade: Boolean = false
@@ -128,16 +125,13 @@ class Fragments {
 
             // retrieve correct fragment
             val fragments = getFragmentList(activity)
-            for (tagFragment in fragments!!) {
-                if (Strings.equals(tagFragment.tag, tag)) {
-                    this.fragment = tagFragment
-                    break
-                }
-            }
+            fragments!!.filter { Strings.equals(it.tag, tag) }
+                    .map { this.fragment = it }
         }
 
-        fun bindPresenter(presenter: BasePresenter): SingleOperator {
-            presenter.setView(fragment)
+        @Suppress("UNCHECKED_CAST")
+        fun <T> bindPresenter(presenter: BasePresenter<T>): SingleOperator {
+            presenter.setView(fragment as T)
             return this
         }
 
@@ -145,9 +139,8 @@ class Fragments {
          * setArguments to target fragment.
          */
         fun data(data: Bundle): SingleOperator {
-            if (fragment != null) {
-                fragment!!.arguments = data
-            } else {
+            fragment?.arguments = data
+            if (fragment == null) {
                 print("fragment is null, will not add data to arguments")
             }
             return this
@@ -221,23 +214,20 @@ class Fragments {
 
             // hide or remove last fragment
             if (hideLast || removeLast) {
-                val fragments = getFragmentList(activityRef!!.get())
-                if (fragments != null) {
-                    fragments
-                            .filter { it.id == containerId }
-                            .forEach {
-                                if (Strings.equals(it.tag, tag)) {
-                                    fragment = it
-                                } else if (it.isVisible) {
-                                    it.userVisibleHint = false
-                                    transaction!!.hide(it)
-                                    if (removeLast) {
-                                        print("last fragment has been totally removed")
-                                        transaction!!.remove(it)
-                                    }
+                val fragments = getFragmentList(activityRef.get())
+                fragments?.filter { it.id == containerId }
+                        ?.forEach {
+                            if (Strings.equals(it.tag, tag)) {
+                                fragment = it
+                            } else if (it.isVisible) {
+                                it.userVisibleHint = false
+                                transaction!!.hide(it)
+                                if (removeLast) {
+                                    print("last fragment has been totally removed")
+                                    transaction!!.remove(it)
                                 }
                             }
-                }
+                        }
             }
 
             val canAddBackStack = transaction!!.isAddToBackStackAllowed && !transaction!!.isEmpty
@@ -272,19 +262,17 @@ class Fragments {
 
             transaction = null
             fragment = null
-            activityRef!!.clear()
+            activityRef.clear()
         }
 
-   }
+    }
 
     // TODO: 6/10/16 MultiOperator is not used that much, so I only give it basic into function here.
-    class MultiOperator
-    @SuppressLint("CommitTransaction")
-    constructor(activity: FragmentActivity, private var fragments: Array<Fragment>?) {
-        private val activityRef: WeakReference<FragmentActivity> = WeakReference(activity)
+    class MultiOperator(activity: FragmentActivity, val fragments: Array<Fragment>) {
+        val activityRef: WeakReference<FragmentActivity> = WeakReference(activity)
 
         fun into(vararg ids: Int) {
-            if (ids.size != fragments!!.size) {
+            if (ids.size != fragments.size) {
                 throw IllegalArgumentException("The length of ids and fragments is not equal.")
             }
 
@@ -295,14 +283,15 @@ class Fragments {
             var i = 0
             val s = ids.size
             while (i < s) {
-                tag = getTag(fragments!![i])
-                transaction.replace(ids[i], fragments!![i], tag)
+                tag = getTag(fragments[i])
+                val fragment = fragments[i]
+                transaction.replace(ids[i], fragment, tag)
                 i++
             }
             transaction.commitAllowingStateLoss()
 
             activityRef.clear()
-            fragments = null
         }
     }
+
 }

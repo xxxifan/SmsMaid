@@ -19,7 +19,7 @@ package com.xxxifan.smsmaid.base
 /**
  * Created by xifan on 5/16/16.
  */
-interface BasePresenter<T> {
+interface BasePresenter<in T> {
     fun setView(view: T)
     fun onDestroy()
 }

@@ -44,7 +44,7 @@ class Strings private constructor() {
         /**
          * @return true if every item is empty
          */
-        fun isEmpty(vararg str: CharSequence): Boolean {
+        fun isEmpty(vararg str: CharSequence?): Boolean {
             var i = 0
             val s = str.size
             while (i < s) {

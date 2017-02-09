@@ -1,4 +1,11 @@
 # SmsMaid
-[WIP] Personal SMS maind
+[WIP] Personal SMS maid
 
-Kotlin playground :)
+## Features
+* Auto sms category by providers  
+* Verify code SMS to copyboard  
+
+## TODO
+    [] SMS helper  
+    [] SMS provider recognizer  
+    [] Verify code recognizer  

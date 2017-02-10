@@ -45,6 +45,7 @@ dependencies {
     compile 'io.reactivex:rxkotlin:0.60.0'
     compile 'com.tbruyelle.rxpermissions:rxpermissions:0.9.1@aar'
     compile 'com.afollestad.material-dialogs:core:0.9.3.0'
+    compile 'com.klinkerapps:android-smsmms:3.5.0'
 
     testCompile 'junit:junit:4.12'
     kapt "com.github.Raizlabs.DBFlow:dbflow-processor:${dbflow_version}"

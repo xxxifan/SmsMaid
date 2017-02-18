@@ -27,10 +27,8 @@ class App : Application() {
 
     private fun initDB() {
         val dbConfig = DatabaseConfig.Builder(AppDatabase::class.java)
-                .openHelper(::SQLCipher)
+                .openHelper({ databaseDefinition, databaseHelperListener -> SQLCipher(databaseDefinition, databaseHelperListener) })
                 .build()
-        FlowManager.init(FlowConfig.Builder(this)
-                .addDatabaseConfig(dbConfig)
-                .build())
+        FlowManager.init(FlowConfig.Builder(this).addDatabaseConfig(dbConfig).build())
     }
 }

@@ -20,6 +20,8 @@ package com.xxxifan.smsmaid.base
  * Created by xifan on 5/16/16.
  */
 interface BasePresenter<in T> {
-    fun setView(view: T)
-    fun onDestroy()
+    fun setView(view: T?)
+    fun onDestroy() {
+        setView(null)
+    }
 }

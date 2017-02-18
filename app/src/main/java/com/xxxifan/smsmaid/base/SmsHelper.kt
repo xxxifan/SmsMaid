@@ -44,22 +44,25 @@ class SmsHelper {
             if (System.currentTimeMillis() - lastCheck > 24 * 60 * 60 * 1000) {
                 val smsArray = ArrayList<SmsTable>()
                 val projection = arrayOf(ID, THREAD_ID, ADDRESS, PERSON, DATE, PROTOCOL, BODY)
-                val cur = context.contentResolver.query(Uri.parse(INBOX), projection, "protocol=0 and person is NULL", null, "date desc")
-                while (cur.moveToNext()) {
-                    val id = cur.getInt(ID_INDEX)
-                    val tid = cur.getInt(THREADID_INDEX)
-                    val address = cur.getString(cur.getColumnIndex(ADDRESS))
-                    val person = cur.getInt(PERSON_INDEX)
-                    val date = cur.getLong(DATE_INDEX)
-                    val body = cur.getString(cur.getColumnIndex(BODY))
 
-                    if (person <= 0) { // no contacts info
-                        // TODO: 2017/2/11 this is not the best way to determine a number is a contact
-                        val sms = SmsTable(id, tid, address, person, date, body)
-                        smsArray.add(sms)
-                    }
-                }
-                cur.close()
+                context.contentResolver
+                        .query(Uri.parse(INBOX), projection, "protocol=0 and person is NULL", null, "date desc")
+                        .use { cur ->
+                            while (cur.moveToNext()) {
+                                val id = cur.getInt(ID_INDEX)
+                                val tid = cur.getInt(THREADID_INDEX)
+                                val address = cur.getString(cur.getColumnIndex(ADDRESS))
+                                val person = cur.getInt(PERSON_INDEX)
+                                val date = cur.getLong(DATE_INDEX)
+                                val body = cur.getString(cur.getColumnIndex(BODY))
+
+                                if (person <= 0) { // no contacts info
+                                    // TODO: 2017/2/11 this is not the best way to determine a number is a contact
+                                    val sms = SmsTable(id, tid, address, person, date, body)
+                                    smsArray.add(sms)
+                                }
+                            }
+                        }
                 AppPref.putLong(KEY_LAST_CHECK, System.currentTimeMillis())
                 return smsArray
             } else {

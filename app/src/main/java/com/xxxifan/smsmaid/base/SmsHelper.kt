@@ -3,6 +3,8 @@ package com.xxxifan.smsmaid.base
 import android.content.Context
 import android.net.Uri
 import android.telephony.SmsManager
+import com.raizlabs.android.dbflow.sql.language.SQLite
+import com.xxxifan.smsmaid.db.ProviderTable
 import com.xxxifan.smsmaid.db.SmsTable
 import java.util.*
 
@@ -16,6 +18,7 @@ class SmsHelper {
 
         private val PROVIDER_START = "【"
         private val PROVIDER_END = "】"
+        private val KEY_LAST_CHECK = "last_check"
 
         private val ID = "_id"
         private val THREAD_ID = "thread_id"
@@ -32,27 +35,48 @@ class SmsHelper {
         private val DATE_INDEX = 4
         private val BODY_INDEX = 12
 
-        fun getSmsNoContacts(context: Context): ArrayList<SmsTable> {
-            val uri = Uri.parse(INBOX)
-            val projection = arrayOf(ID, THREAD_ID, ADDRESS, PERSON, DATE, PROTOCOL, BODY)
-            val cur = context.contentResolver.query(uri, projection, "protocol=0 and person is NULL", null, "date desc")
-            val smsArray = ArrayList<SmsTable>()
-            while (cur.moveToNext()) {
-                val id = cur.getInt(ID_INDEX)
-                val tid = cur.getInt(THREADID_INDEX)
-                val address = cur.getString(ADDRESS_INDEX) ?: cur.getString(cur.getColumnIndex(ADDRESS))
-                val person = cur.getInt(PERSON_INDEX)
-                val date = cur.getLong(DATE_INDEX)
-                val body = cur.getString(BODY_INDEX) ?: cur.getString(cur.getColumnIndex(BODY))
-
-                if (person <= 0) { // no contacts info
-                    // TODO: 2017/2/11 this is not the best way to determine a number is a contact
-                    val sms = SmsTable(id, tid, address, person, date, body)
-                    smsArray.add(sms)
-                }
+        fun getSmsNoContacts(context: Context?): ArrayList<SmsTable> {
+            if (context == null) {
+                return ArrayList()
             }
-            cur.close()
-            return smsArray
+
+            val lastCheck = AppPref.getLong(KEY_LAST_CHECK, 0)
+            if (System.currentTimeMillis() - lastCheck > 24 * 60 * 60 * 1000) {
+                val smsArray = ArrayList<SmsTable>()
+                val projection = arrayOf(ID, THREAD_ID, ADDRESS, PERSON, DATE, PROTOCOL, BODY)
+                val cur = context.contentResolver.query(Uri.parse(INBOX), projection, "protocol=0 and person is NULL", null, "date desc")
+                while (cur.moveToNext()) {
+                    val id = cur.getInt(ID_INDEX)
+                    val tid = cur.getInt(THREADID_INDEX)
+                    val address = cur.getString(cur.getColumnIndex(ADDRESS))
+                    val person = cur.getInt(PERSON_INDEX)
+                    val date = cur.getLong(DATE_INDEX)
+                    val body = cur.getString(cur.getColumnIndex(BODY))
+
+                    if (person <= 0) { // no contacts info
+                        // TODO: 2017/2/11 this is not the best way to determine a number is a contact
+                        val sms = SmsTable(id, tid, address, person, date, body)
+                        smsArray.add(sms)
+                    }
+                }
+                cur.close()
+                AppPref.putLong(KEY_LAST_CHECK, System.currentTimeMillis())
+                return smsArray
+            } else {
+                return getSmsList()
+            }
+        }
+
+        fun getSmsList(): ArrayList<SmsTable> {
+            return SQLite.select()
+                    .from(SmsTable::class.java)
+                    .queryList() as ArrayList<SmsTable>
+        }
+
+        fun getProviderList(): ArrayList<ProviderTable> {
+            return SQLite.select()
+                    .from(ProviderTable::class.java)
+                    .queryList() as ArrayList<ProviderTable>
         }
 
         fun getSmsProviderName(body: String): String? {

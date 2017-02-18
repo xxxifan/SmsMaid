@@ -21,10 +21,11 @@ class SmsTable() : BaseModel() {
         this.body = body
     }
 
-    @PrimaryKey var id: Int = 0
+    @PrimaryKey(quickCheckAutoIncrement = true) var id: Int = 0
     @Column var threadId: Int = 0
     @Column var address: String = EMPTY
     @Column var person: Int = 0
     @Column var date: Long = 0L
     @Column var body: String = EMPTY
+    @Column var providerName: String?=""
 }

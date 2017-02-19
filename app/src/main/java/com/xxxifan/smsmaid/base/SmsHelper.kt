@@ -59,6 +59,7 @@ class SmsHelper {
                                 if (person <= 0) { // no contacts info
                                     // TODO: 2017/2/11 this is not the best way to determine a number is a contact
                                     val sms = SmsTable(id, tid, address, person, date, body)
+                                    guessProvider(sms)
                                     smsArray.add(sms)
                                 }
                             }
@@ -68,6 +69,17 @@ class SmsHelper {
             } else {
                 return getSmsList()
             }
+        }
+
+        private fun guessProvider(sms: SmsTable) {
+            val body = sms.body
+            val start = body.indexOf(PROVIDER_START)
+            val end = body.indexOf(PROVIDER_END)
+            if (start < 0 || start > 0 && end < body.length - 1) {
+                return
+            }
+
+            body.substring(start + 1, end)
         }
 
         fun getSmsList(): ArrayList<SmsTable> {

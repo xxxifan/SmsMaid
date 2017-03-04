@@ -16,6 +16,7 @@
 
 package com.xxxifan.smsmaid.base
 
+
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.annotation.AnimRes
@@ -26,9 +27,6 @@ import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentTransaction
 import android.support.v4.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE
 import android.view.View
-
-
-import java.lang.ref.WeakReference
 
 /**
  * Created by xifan on 6/7/16.
@@ -97,7 +95,7 @@ class Fragments {
     }
 
     class SingleOperator {
-        private var activityRef: WeakReference<FragmentActivity>
+        private var activity: FragmentActivity? = null
         private var fragment: Fragment? = null
         private var tag: String
         private var transaction: FragmentTransaction?
@@ -107,19 +105,19 @@ class Fragments {
         private var removeLast: Boolean = false
         private var hideLast = true
 
-        internal constructor(activity: FragmentActivity, fragment: Fragment) : this(activity, fragment, getTag(fragment))
+        constructor(activity: FragmentActivity, fragment: Fragment) : this(activity, fragment, getTag(fragment))
 
         @SuppressLint("CommitTransaction")
-        internal constructor(activity: FragmentActivity, fragment: Fragment, tag: String) {
-            this.activityRef = WeakReference(activity)
+        constructor(activity: FragmentActivity, fragment: Fragment, tag: String) {
+            this.activity = activity
             this.fragment = fragment
             this.tag = tag
             this.transaction = activity.supportFragmentManager.beginTransaction()
         }
 
         @SuppressLint("CommitTransaction")
-        internal constructor(activity: FragmentActivity, tag: String) {
-            this.activityRef = WeakReference(activity)
+        constructor(activity: FragmentActivity, tag: String) {
+            this.activity = activity
             this.tag = tag
             this.transaction = activity.supportFragmentManager.beginTransaction()
 
@@ -214,7 +212,7 @@ class Fragments {
 
             // hide or remove last fragment
             if (hideLast || removeLast) {
-                val fragments = getFragmentList(activityRef.get())
+                val fragments = getFragmentList(activity!!)
                 fragments?.filter { it.id == containerId }
                         ?.forEach {
                             if (Strings.equals(it.tag, tag)) {
@@ -262,21 +260,20 @@ class Fragments {
 
             transaction = null
             fragment = null
-            activityRef.clear()
+            activity = null
         }
 
     }
 
     // TODO: 6/10/16 MultiOperator is not used that much, so I only give it basic into function here.
-    class MultiOperator(activity: FragmentActivity, val fragments: Array<Fragment>) {
-        val activityRef: WeakReference<FragmentActivity> = WeakReference(activity)
+    class MultiOperator(var activity: FragmentActivity?, val fragments: Array<Fragment>) {
 
         fun into(vararg ids: Int) {
             if (ids.size != fragments.size) {
                 throw IllegalArgumentException("The length of ids and fragments is not equal.")
             }
 
-            val transaction = activityRef.get()
+            val transaction = activity!!
                     .supportFragmentManager
                     .beginTransaction()
             var tag: String
@@ -289,8 +286,7 @@ class Fragments {
                 i++
             }
             transaction.commitAllowingStateLoss()
-
-            activityRef.clear()
+            activity = null
         }
     }
 

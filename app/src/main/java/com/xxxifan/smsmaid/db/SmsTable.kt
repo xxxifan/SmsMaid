@@ -27,5 +27,5 @@ class SmsTable() : BaseModel() {
     @Column var person: Int = 0
     @Column var date: Long = 0L
     @Column var body: String = EMPTY
-    @Column var providerName: String?=""
+    @Column var providerName: String? = ""
 }

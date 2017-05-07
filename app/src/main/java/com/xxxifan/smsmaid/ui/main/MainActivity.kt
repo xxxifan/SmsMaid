@@ -3,7 +3,7 @@ package com.xxxifan.smsmaid.ui.main
 import android.Manifest.permission
 import android.os.Bundle
 import com.afollestad.materialdialogs.MaterialDialog
-import com.tbruyelle.rxpermissions.RxPermissions
+import com.tbruyelle.rxpermissions2.RxPermissions
 import com.xxxifan.smsmaid.HomeFragment
 import com.xxxifan.smsmaid.R
 import com.xxxifan.smsmaid.base.BaseActivity
@@ -49,8 +49,8 @@ class MainActivity : BaseActivity(), MainContract.View {
                 .content("只有获取联系人/短信相关权限本应用才能正确执行，是否继续？")
                 .positiveText(android.R.string.ok)
                 .negativeText(android.R.string.cancel)
-                .onPositive { materialDialog, dialogAction -> requestPermission() }
-                .onNegative { materialDialog, dialogAction -> this@MainActivity.finish() }
+                .onPositive { _, _ -> requestPermission() }
+                .onNegative { _, _ -> this@MainActivity.finish() }
                 .build()
                 .show()
     }
